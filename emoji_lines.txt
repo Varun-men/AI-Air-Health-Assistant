@@ -1,0 +1,18 @@
+Line 15:     page_icon="🌍",
+Line 864:     city = st.selectbox("🏙️ Choose City", cities, label_visibility="visible")
+Line 866:     predict_clicked = st.button("🚀  PREDICT AQI", use_container_width=True)
+Line 969:     with st.spinner("🔍 AI is analyzing air quality patterns..."):
+Line 978:             return "GOOD", "#10b981", "😊", "rgba(16,185,129,0.12)"
+Line 980:             return "MODERATE", "#22d3ee", "🙂", "rgba(34,211,238,0.12)"
+Line 982:             return "UNHEALTHY", "#f59e0b", "⚠️", "rgba(245,158,11,0.12)"
+Line 984:             return "VERY UNHEALTHY", "#f97316", "😷", "rgba(249,115,22,0.12)"
+Line 986:             return "HAZARDOUS", "#ef4444", "🚨", "rgba(239,68,68,0.12)"
+Line 1090:         "😷": ("Asthma Patients", *get_risk(prediction, 80, 150)),
+Line 1091:         "👶": ("Children", *get_risk(prediction, 100, 200)),
+Line 1092:         "👴": ("Elderly", *get_risk(prediction, 90, 170)),
+Line 1093:         "🏃": ("Healthy Adults", *get_risk(prediction, 150, 300)),
+Line 1116:         advice_icon = "🌿"
+Line 1121:         advice_icon = "😷"
+Line 1126:         advice_icon = "⚠️"
+Line 1131:         advice_icon = "🚨"
+Line 1157:     tab1, tab2, tab3 = st.tabs(["📈  AQI Trend", "🧪  Pollutants", "🌡️  Environment"])
