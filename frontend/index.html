@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AURA — Autonomous Urban Risk Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400..800;1,6..72,400..800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ━━━ DESIGN TOKENS (DEBUSSY SPEC) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070b14;
+  --bg-card:#0b1120;
+  --bg-card-hover:#0f172a;
+  --bg-darker:#04070d;
+  --blue:#2563eb;
+  --blue-bright:#38bdf8;
+  --blue-glow:rgba(37,99,235,0.5);
+  --green:#10b981;
+  --amber:#f59e0b;
+  --orange:#f97316;
+  --red:#ef4444;
+  --white:#ffffff;
+  --text-muted:#8892b0;
+  --text-sub:rgba(255,255,255,0.72);
+  --rule:rgba(255,255,255,0.08);
+  --rule-bright:rgba(255,255,255,0.18);
+  --slab:'DM Serif Display', 'Newsreader', Georgia, serif;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--white);
+  line-height:1.6;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font-family:inherit}
+button{cursor:pointer}
+
+/* ━━━ NAVIGATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 64px;height:94px;
+  background:rgba(7,11,20,0.94);
+  backdrop-filter:blur(28px);
+  border-bottom:1px solid var(--rule);
+}
+.nav-brand{
+  display:flex;align-items:center;gap:3px;
+  font-family:var(--slab);font-weight:700;font-size:30px;
+  letter-spacing:-0.5px;
+}
+.brand-dot{
+  display:inline-block;width:7px;height:7px;
+  background:var(--blue);border-radius:1px;
+  margin-left:2px;margin-bottom:5px;
+  box-shadow:0 0 10px var(--blue);
+}
+.nav-links{display:flex;gap:48px;list-style:none}
+.nav-links a{
+  font-family:var(--mono);font-size:12px;font-weight:600;
+  letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--text-muted);transition:color .2s;
+}
+.nav-links a:hover,.nav-links a.active{color:var(--white)}
+.nav-right{display:flex;align-items:center;gap:20px}
+.city-select-pill{
+  background:rgba(37,99,235,0.08);
+  border:1px solid rgba(37,99,235,0.35);
+  color:var(--white);font-family:var(--mono);
+  font-size:12px;letter-spacing:0.08em;
+  padding:10px 18px;outline:none;cursor:pointer;
+  border-radius:3px;
+}
+.city-select-pill option{background:var(--bg-card);color:var(--white)}
+.btn-nav-auth{
+  padding:10px 22px;background:rgba(37,99,235,0.12);
+  border:1px solid rgba(37,99,235,0.4);color:var(--white);
+  font-family:var(--mono);font-size:11px;font-weight:600;
+  letter-spacing:0.12em;text-transform:uppercase;
+  border-radius:3px;cursor:pointer;transition:all .2s;
+}
+.btn-nav-auth:hover{background:var(--blue);border-color:var(--blue)}
+
+.user-profile-badge{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 16px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--rule);border-radius:3px;
+  cursor:pointer;position:relative;font-family:var(--mono);
+  font-size:11px;letter-spacing:0.06em;
+}
+.user-avatar-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 8px var(--green);
+}
+.user-menu-dropdown{
+  position:absolute;top:calc(100% + 8px);right:0;
+  width:180px;background:var(--bg-card);border:1px solid var(--rule);
+  padding:6px;box-shadow:0 12px 32px rgba(0,0,0,0.5);
+  display:none;flex-direction:column;gap:2px;z-index:1000;
+}
+.user-menu-item{
+  padding:10px 14px;font-size:12px;color:var(--text-sub);
+  cursor:pointer;transition:background .15s,color .15s;
+}
+.user-menu-item:hover{background:rgba(255,255,255,0.04);color:var(--white)}
+.user-menu-item.logout{color:var(--red);border-top:1px solid var(--rule);margin-top:4px}
+
+.btn-nav-cta{
+  padding:12px 28px;border:1.5px solid rgba(255,255,255,0.85);
+  background:transparent;color:var(--white);
+  font-size:13px;font-weight:600;letter-spacing:0.04em;
+  border-radius:4px;transition:all .25s var(--ease);
+}
+.btn-nav-cta:hover{background:var(--white);color:var(--bg)}
+
+/* ━━━ HERO SECTION (EXACT DEBUSSY REPRODUCTION) ━━━━━━━━━━━━━━━ */
+.hero{
+  position:relative;min-height:100vh;
+  display:flex;align-items:center;
+  padding:130px 64px 60px;
+  overflow:hidden;
+}
+/* Right Portrait Image Slider */
+.hero-portrait{
+  position:absolute;top:0;right:0;bottom:0;width:58%;
+  z-index:1;overflow:hidden;pointer-events:none;
+}
+.hero-slide{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:60% 25%;
+  opacity:0;
+  filter:blur(16px) brightness(0.35) saturate(0.65);
+  transform:scale(1.06);
+  transition:opacity 1.4s cubic-bezier(0.4, 0, 0.2, 1),
+              filter 1.4s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change:opacity,filter,transform;
+}
+.hero-slide.active{
+  opacity:1;
+  filter:blur(0px) brightness(0.65) saturate(0.85);
+  transform:scale(1);
+}
+.slider-counter{
+  position:absolute;bottom:36px;right:64px;z-index:4;
+  font-family:var(--mono);font-size:11px;letter-spacing:0.18em;
+  color:rgba(255,255,255,0.45);
+}
+.slider-counter span{color:var(--blue-bright);font-weight:600}
+.slider-progress-track{
+  position:absolute;bottom:42px;right:144px;width:60px;height:2px;
+  background:rgba(255,255,255,0.12);z-index:4;overflow:hidden;
+}
+.slider-progress-bar{
+  height:100%;width:0%;background:var(--blue-bright);
+}
+
+/* Film-grade Vignette / Gradient blend */
+.hero-portrait::after{
+  content:'';position:absolute;inset:0;z-index:2;
+  background:
+    linear-gradient(to right, var(--bg) 0%, rgba(7,11,20,0.85) 28%, rgba(7,11,20,0.2) 65%, transparent 100%),
+    linear-gradient(to top, var(--bg) 0%, rgba(7,11,20,0.6) 20%, transparent 60%);
+}
+.hero-content{
+  position:relative;z-index:3;
+  max-width:920px;width:100%;
+}
+.hero-pre{
+  display:inline-flex;align-items:center;gap:14px;
+  font-family:var(--mono);font-size:11px;letter-spacing:0.24em;
+  text-transform:uppercase;color:var(--blue-bright);
+  margin-bottom:28px;
+}
+.hero-pre-line{
+  width:40px;height:1px;background:var(--blue-bright);opacity:0.8;
+}
+.hero-h1{
+  font-family:var(--slab);
+  font-size:clamp(52px, 6.8vw, 92px);
+  font-weight:700;line-height:1.05;
+  letter-spacing:-0.025em;
+  color:var(--white);
+  margin-bottom:0;
+  position:relative;
+}
+.hero-row3{
+  display:flex;
+  align-items:center;
+  gap:24px;
+  width:100%;
+  position:relative;
+}
+.hero-last-word{
+  flex-shrink:0;
+  white-space:nowrap;
+  position:relative;
+  z-index:4;
+}
+/* Full-width pulse telemetry overlay (Debussy-style) */
+.hero-pulse-overlay{
+  position:absolute;
+  left:0;right:0;
+  top:62%;
+  height:80px;
+  z-index:5;
+  pointer-events:none;
+  overflow:visible;
+}
+.hero-pulse-svg{
+  width:100%;height:100%;overflow:visible;
+  display:block;
+}
+
+/* City typeahead search */
+.city-search-wrap{
+  position:relative;
+}
+.city-search-input{
+  background:rgba(37,99,235,0.08);
+  border:1px solid rgba(37,99,235,0.35);
+  color:var(--white);font-family:var(--mono);
+  font-size:12px;letter-spacing:0.08em;
+  padding:10px 18px;outline:none;cursor:text;
+  border-radius:3px;width:180px;
+}
+.city-search-input::placeholder{color:var(--text-muted)}
+.city-search-input:focus{border-color:rgba(56,189,248,0.6);width:240px;transition:width .2s}
+.city-dropdown{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:var(--bg-card);border:1px solid rgba(56,189,248,0.3);
+  box-shadow:0 12px 28px rgba(0,0,0,0.6);
+  max-height:220px;overflow-y:auto;z-index:2000;
+  display:none;
+}
+.city-option{
+  padding:10px 16px;font-family:var(--mono);font-size:11px;
+  color:var(--text-sub);cursor:pointer;letter-spacing:0.06em;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  transition:background .15s,color .15s;
+}
+.city-option:hover,.city-option.active-opt{background:rgba(37,99,235,0.18);color:var(--white)}
+.city-option .opt-country{color:var(--text-muted);font-size:9px;display:block;margin-top:2px}
+
+.hero-p{
+  font-size:17px;color:rgba(255,255,255,0.72);
+  line-height:1.75;max-width:530px;
+  margin-top:32px;margin-bottom:42px;
+  font-weight:400;
+}
+.hero-btn-group{display:flex;gap:16px;align-items:center}
+.btn-de-blue{
+  padding:15px 36px;background:var(--blue);
+  color:var(--white);font-size:13px;font-weight:600;
+  letter-spacing:0.04em;border:none;border-radius:2px;
+  transition:all .2s;
+}
+.btn-de-blue:hover{background:#1d4ed8;transform:translateY(-1px)}
+.btn-de-ghost{
+  padding:14px 34px;background:transparent;
+  border:1px solid rgba(255,255,255,0.35);color:var(--white);
+  font-size:13px;font-weight:500;border-radius:2px;
+  transition:border-color .2s;
+}
+.btn-de-ghost:hover{border-color:var(--white)}
+
+/* ━━━ METRIC STRIP (IMMEDIATELY BELOW HERO) ━━━━━━━━━━━━━━━━━━━ */
+.metric-strip{
+  position:relative;z-index:5;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  background:var(--bg-card);border-top:1px solid var(--rule);
+  border-bottom:1px solid var(--rule);
+}
+.m-strip-cell{
+  padding:34px 44px;
+  border-right:1px solid var(--rule);
+}
+.m-strip-cell:last-child{border-right:none}
+.m-strip-val{
+  font-family:var(--slab);font-size:48px;font-weight:700;
+  line-height:1;margin-bottom:8px;
+}
+.m-strip-lbl{
+  font-family:var(--mono);font-size:10px;
+  letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--text-muted);
+}
+.m-strip-lbl span{color:var(--blue-bright)}
+
+/* ━━━ MAIN AURA AI APPARATUS (INTERACTIVE TABS) ━━━━━━━━━━━━━━━ */
+#app-interface{
+  background:var(--bg);padding:100px 52px;
+}
+.section-tag{
+  font-family:var(--mono);font-size:10px;letter-spacing:0.22em;
+  text-transform:uppercase;color:var(--blue-bright);
+  display:flex;align-items:center;gap:12px;margin-bottom:20px;
+}
+.section-tag::before{content:'';width:24px;height:1px;background:var(--blue-bright)}
+.section-title{
+  font-family:var(--slab);font-size:clamp(32px,4vw,56px);
+  font-weight:800;line-height:1.1;letter-spacing:-0.02em;
+  margin-bottom:14px;
+}
+.section-sub{
+  font-size:15px;color:var(--text-muted);line-height:1.8;
+  max-width:620px;margin-bottom:48px;
+}
+
+/* Tab Headers */
+.tab-nav{
+  display:flex;gap:4px;background:var(--bg-card);
+  padding:6px;border:1px solid var(--rule);
+  margin-bottom:32px;overflow-x:auto;
+}
+.tab-btn{
+  background:transparent;border:none;color:var(--text-muted);
+  font-family:var(--mono);font-size:11px;font-weight:600;
+  letter-spacing:0.14em;text-transform:uppercase;
+  padding:12px 24px;cursor:pointer;white-space:nowrap;
+  transition:all .2s;
+}
+.tab-btn:hover{color:var(--white)}
+.tab-btn.active{
+  background:var(--blue);color:var(--white);
+}
+
+/* Tab Panels */
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* ── TAB 1: LIVE SENSORS & SHAP EXPLAINABILITY ── */
+.panel-grid-2col{
+  display:grid;grid-template-columns:1fr 1fr;gap:24px;
+}
+.card-dark{
+  background:var(--bg-card);border:1px solid var(--rule);
+  padding:36px;transition:border-color .2s;
+}
+.card-dark:hover{border-color:var(--rule-bright)}
+.card-title{
+  font-family:var(--slab);font-size:20px;font-weight:700;
+  margin-bottom:6px;
+}
+.card-desc{font-size:13px;color:var(--text-muted);margin-bottom:28px}
+
+.aqi-hero-gauge{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:24px;background:rgba(255,255,255,0.02);
+  border:1px solid var(--rule);margin-bottom:28px;
+}
+.aqi-num{
+  font-family:var(--slab);font-size:68px;font-weight:800;line-height:0.9;
+}
+.risk-badge-box{
+  font-family:var(--mono);font-size:10px;font-weight:600;
+  letter-spacing:0.16em;padding:6px 16px;border:1px solid;
+  text-transform:uppercase;display:inline-block;
+}
+
+/* Telemetry Mini Bars */
+.telemetry-table{display:flex;flex-direction:column;gap:14px}
+.telem-row{display:flex;flex-direction:column;gap:5px}
+.telem-info{display:flex;justify-content:space-between;font-size:12px}
+.telem-name{font-family:var(--mono);color:var(--text-muted);letter-spacing:0.06em}
+.telem-val{font-weight:600}
+.telem-bar-bg{height:4px;background:rgba(255,255,255,0.06)}
+.telem-bar-fill{height:4px;transition:width 1s var(--ease)}
+
+/* SHAP Feature Contribution */
+.shap-list{display:flex;flex-direction:column;gap:16px}
+.shap-row{display:flex;flex-direction:column;gap:6px}
+.shap-header{display:flex;justify-content:space-between;font-size:12px}
+.shap-feat{font-family:var(--mono);font-weight:600}
+.shap-pct{font-family:var(--mono);color:var(--blue-bright)}
+.shap-bar-bg{height:6px;background:rgba(255,255,255,0.06)}
+.shap-bar-fill{height:6px;background:var(--blue);transition:width 1s var(--ease)}
+.shap-exp-text{
+  margin-top:24px;padding:16px;background:rgba(37,99,235,0.06);
+  border-left:3px solid var(--blue);font-size:13px;
+  color:var(--text-sub);line-height:1.7;
+}
+
+/* ── TAB 2: PERSONAL EXPOSURE ENGINE ── */
+.form-ctrl-group{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.form-label{
+  font-family:var(--mono);font-size:10px;letter-spacing:0.18em;
+  text-transform:uppercase;color:var(--text-muted);
+}
+.form-select, .form-range{
+  background:rgba(255,255,255,0.04);border:1px solid var(--rule);
+  color:var(--white);padding:14px;font-size:14px;outline:none;
+}
+.form-select option{background:var(--bg-card)}
+.toggle-switch-box{
+  display:flex;align-items:center;gap:14px;
+  padding:16px;background:rgba(255,255,255,0.02);border:1px solid var(--rule);
+}
+.calc-result-box{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:48px 24px;background:rgba(37,99,235,0.04);
+  border:1px solid rgba(37,99,235,0.25);
+}
+.calc-exposure-val{
+  font-family:var(--slab);font-size:84px;font-weight:800;
+  line-height:0.9;color:var(--orange);margin-bottom:12px;
+}
+.calc-exposure-lbl{
+  font-family:var(--mono);font-size:11px;letter-spacing:0.2em;
+  text-transform:uppercase;color:var(--text-muted);margin-bottom:24px;
+}
+.multiplier-pill-row{
+  display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+}
+.mult-pill{
+  padding:6px 14px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--rule);font-family:var(--mono);
+  font-size:10px;color:var(--text-sub);
+}
+
+/* ── TAB 3: WHAT-IF SIMULATOR & CONSTRAINT OPTIMIZER ── */
+.sim-timeline-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:12px;
+  margin-bottom:32px;
+}
+.sim-card{
+  background:var(--bg-card);border:1px solid var(--rule);
+  padding:20px 16px;text-align:center;transition:all .2s;
+}
+.sim-card.best{
+  border-color:var(--green);background:rgba(16,185,129,0.06);
+}
+.sim-horizon{font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-bottom:10px}
+.sim-score{font-family:var(--slab);font-size:36px;font-weight:700;line-height:1;margin-bottom:6px}
+.sim-delta{font-family:var(--mono);font-size:10px}
+
+.constraint-box{
+  background:rgba(255,255,255,0.02);border:1px solid var(--rule);
+  padding:32px;margin-top:28px;
+}
+.constraint-toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--rule);
+}
+.opt-suggestions-list{display:flex;flex-direction:column;gap:12px}
+.opt-sugg-item{
+  padding:14px 18px;background:rgba(37,99,235,0.06);
+  border-left:3px solid var(--blue-bright);font-size:13px;
+  color:var(--white);display:flex;align-items:center;gap:12px;
+}
+
+/* ── TAB 4: ASK AURA (AI AGENT CHAT) ── */
+.chat-container{
+  background:var(--bg-card);border:1px solid var(--rule);
+  display:flex;flex-direction:column;height:640px;
+}
+.chat-header{
+  padding:18px 24px;border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--mono);font-size:13px;letter-spacing:0.12em;
+}
+.chat-feed{
+  flex:1;overflow-y:auto;padding:24px;
+  display:flex;flex-direction:column;gap:18px;
+}
+.chat-bubble{
+  max-width:80%;padding:18px 22px;border-radius:2px;font-size:15px;line-height:1.7;
+}
+.chat-bubble.user{
+  align-self:flex-end;background:rgba(37,99,235,0.18);
+  border:1px solid rgba(37,99,235,0.4);color:var(--white);
+}
+.chat-bubble.aura{
+  align-self:flex-start;background:rgba(255,255,255,0.03);
+  border:1px solid var(--rule);color:var(--white);
+}
+.tool-tag{
+  display:inline-block;margin-top:10px;padding:4px 12px;
+  background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);
+  font-family:var(--mono);font-size:11px;color:var(--blue-bright);
+}
+.chat-chips{
+  display:flex;gap:8px;padding:12px 24px;overflow-x:auto;
+  border-top:1px solid var(--rule);background:rgba(0,0,0,0.1);
+}
+.chip-btn{
+  background:rgba(255,255,255,0.04);border:1px solid var(--rule);
+  color:var(--text-muted);font-size:12px;padding:8px 16px;
+  border-radius:2px;white-space:nowrap;transition:all .15s;
+}
+.chip-btn:hover{color:var(--white);border-color:var(--rule-bright)}
+.chat-input-bar{
+  display:flex;border-top:1px solid var(--rule);padding:16px 20px;
+  background:var(--bg-darker);
+}
+.chat-input-bar input{
+  flex:1;background:transparent;border:none;color:var(--white);
+  font-size:15px;outline:none;
+}
+.chat-send-btn{
+  background:var(--blue);border:none;color:var(--white);
+  padding:11px 28px;font-family:var(--mono);font-size:12px;
+  letter-spacing:0.1em;border-radius:2px;font-weight:600;
+}
+
+/* ── TAB 5: AGENT OBSERVABILITY FEED ── */
+.agent-feed-table{
+  display:flex;flex-direction:column;border:1px solid var(--rule);
+}
+.feed-row{
+  display:grid;grid-template-columns:100px 180px 1fr 100px;
+  padding:14px 20px;border-bottom:1px solid var(--rule);
+  font-size:12px;align-items:center;
+}
+.feed-row.header{
+  background:rgba(255,255,255,0.03);font-family:var(--mono);
+  font-size:10px;color:var(--text-muted);letter-spacing:0.14em;
+}
+.feed-ts{font-family:var(--mono);color:var(--text-muted)}
+.feed-agent{font-family:var(--mono);font-weight:600}
+.feed-status-badge{
+  font-family:var(--mono);font-size:9px;padding:3px 8px;
+  text-align:center;border:1px solid;
+}
+
+/* ━━━ METHOD & EDITORIAL SECTIONS (DEBUSSY FORMAT) ━━━━━━━━━━━━ */
+#method{background:var(--bg-darker);padding:110px 52px}
+.split-editorial{
+  display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;
+}
+.editorial-img{position:relative}
+.editorial-img img{
+  width:100%;height:460px;object-fit:cover;
+  filter:brightness(0.75) contrast(1.1) saturate(0.7);
+}
+.editorial-fig{
+  position:absolute;bottom:-20px;left:0;
+  font-family:var(--mono);font-size:9px;letter-spacing:0.2em;color:var(--text-muted);
+  display:flex;align-items:center;gap:12px;
+}
+.editorial-fig::before{content:'';width:28px;height:1px;background:var(--text-muted)}
+
+.editorial-pillars{
+  display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:40px;
+}
+.pillar-card{
+  padding:24px;border:1px solid var(--rule);border-top:2px solid var(--blue);
+}
+.pillar-num{font-family:var(--mono);font-size:11px;color:var(--blue-bright);margin-bottom:8px}
+.pillar-h{font-size:14px;font-weight:600;margin-bottom:6px}
+.pillar-p{font-size:12px;color:var(--text-muted);line-height:1.6}
+
+/* ━━━ FOOTER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+footer{
+  padding:72px 52px;background:var(--bg-darker);
+  border-top:1px solid var(--rule);
+  display:grid;grid-template-columns:2fr 1fr 1fr;gap:60px;
+}
+.footer-logo{
+  font-family:var(--slab);font-size:22px;font-weight:700;
+  margin-bottom:12px;
+}
+.footer-desc{font-size:13px;color:var(--text-muted);max-width:320px;line-height:1.7}
+.footer-col h4{
+  font-family:var(--mono);font-size:10px;letter-spacing:0.2em;
+  color:var(--text-muted);margin-bottom:20px;
+}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:12px}
+.footer-col a{font-size:13px;color:var(--text-sub);transition:color .2s}
+.footer-col a:hover{color:var(--white)}
+.footer-bottom{
+  padding:24px 52px;background:var(--bg-darker);border-top:1px solid var(--rule);
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:var(--mono);font-size:10px;letter-spacing:0.12em;color:var(--text-muted);
+}
+
+/* ━━━ AUTHENTICATION MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.auth-modal-overlay{
+  position:fixed;inset:0;background:rgba(4,7,13,0.85);
+  backdrop-filter:blur(16px);z-index:9999;
+  display:flex;align-items:center;justify-content:center;padding:24px;
+}
+.auth-modal-card{
+  background:var(--bg-card);border:1px solid rgba(56,189,248,0.25);
+  box-shadow:0 24px 64px rgba(0,0,0,0.7),0 0 32px rgba(37,99,235,0.15);
+  width:100%;max-width:480px;padding:40px;position:relative;
+}
+.auth-modal-close{
+  position:absolute;top:20px;right:20px;background:none;border:none;
+  color:var(--text-muted);font-size:24px;cursor:pointer;
+  transition:color .2s;line-height:1;
+}
+.auth-modal-close:hover{color:var(--white)}
+.auth-pre{
+  font-family:var(--mono);font-size:9px;letter-spacing:0.22em;
+  color:var(--blue-bright);margin-bottom:12px;
+}
+.auth-title{
+  font-family:var(--slab);font-size:26px;font-weight:700;
+  margin-bottom:8px;
+}
+.auth-desc{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:24px}
+.auth-tabs{
+  display:flex;gap:4px;background:rgba(0,0,0,0.25);
+  padding:4px;border:1px solid var(--rule);margin-bottom:24px;
+}
+.auth-tab{
+  flex:1;background:transparent;border:none;padding:10px;
+  color:var(--text-muted);font-family:var(--mono);font-size:10px;
+  letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;
+  transition:all .2s;
+}
+.auth-tab.active{background:var(--blue);color:var(--white)}
+.auth-field{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.auth-field label{
+  font-family:var(--mono);font-size:9px;letter-spacing:0.18em;
+  color:var(--text-muted);
+}
+.auth-field input, .auth-select{
+  background:rgba(255,255,255,0.03);border:1px solid var(--rule);
+  color:var(--white);padding:12px 14px;font-size:13px;outline:none;
+}
+.auth-field input:focus, .auth-select:focus{border-color:var(--blue-bright)}
+.auth-select option{background:var(--bg-card)}
+.auth-submit-btn{
+  width:100%;padding:14px;background:var(--blue);
+  border:none;color:var(--white);font-size:12px;font-weight:600;
+  font-family:var(--mono);letter-spacing:0.14em;text-transform:uppercase;
+  cursor:pointer;margin-top:10px;transition:background .2s;
+}
+.auth-submit-btn:hover{background:#1d4ed8}
+.quick-login-label{
+  font-family:var(--mono);font-size:9px;letter-spacing:0.18em;
+  color:var(--text-muted);margin:24px 0 10px;
+}
+.quick-chips-row{display:flex;flex-direction:column;gap:6px}
+.quick-chip{
+  background:rgba(255,255,255,0.02);border:1px solid var(--rule);
+  color:var(--text-sub);padding:8px 12px;font-family:var(--mono);
+  font-size:10px;letter-spacing:0.06em;text-align:left;cursor:pointer;
+  transition:all .15s;
+}
+.quick-chip:hover{
+  background:rgba(37,99,235,0.08);border-color:var(--blue-bright);color:var(--white);
+}
+
+/* ━━━ SCROLL POP-UP MOTION SYSTEM ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.reveal {
+  opacity: 0;
+  transform: translateY(42px) scale(0.96);
+  filter: blur(4px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform, filter;
+}
+
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+/* Staggered entry delays */
+.delay-1 { transition-delay: 0.08s; }
+.delay-2 { transition-delay: 0.16s; }
+.delay-3 { transition-delay: 0.24s; }
+.delay-4 { transition-delay: 0.32s; }
+.delay-5 { transition-delay: 0.40s; }
+
+/* Interactive Hover Pop for cards */
+.card-dark, .m-strip-cell, .sim-card, .pillar-card, .calc-result-box {
+  transition: transform 0.35s var(--ease), border-color 0.35s var(--ease), box-shadow 0.35s var(--ease);
+}
+.card-dark:hover, .sim-card:hover, .pillar-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 20px rgba(37, 99, 235, 0.15);
+}
+.m-strip-cell:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ━━━ RESPONSIVE STYLES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media(max-width:1050px){
+  .hero-portrait{opacity:0.35;width:100%}
+  .metric-strip{grid-template-columns:1fr 1fr}
+  .m-strip-cell{border-bottom:1px solid var(--rule)}
+  .panel-grid-2col{grid-template-columns:1fr}
+  .split-editorial{grid-template-columns:1fr}
+  .sim-timeline-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:768px){
+  nav{padding:0 24px}
+  .nav-links{display:none}
+  .hero{padding:100px 24px 60px}
+  #app-interface, #method, footer{padding:72px 24px}
+  .footer-bottom{padding:24px;flex-direction:column;gap:10px}
+  .metric-strip{grid-template-columns:1fr}
+  .sim-timeline-grid{grid-template-columns:1fr 1fr}
+  .feed-row{grid-template-columns:80px 120px 1fr}
+  .feed-row .feed-status-badge{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ━━━ NAVIGATION ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<nav>
+  <div class="nav-brand">AURA<span class="brand-dot"></span></div>
+  <ul class="nav-links">
+    <li><a href="#app-interface" class="active" onclick="document.getElementById('app-interface').scrollIntoView({behavior:'smooth'});return false;">Apparatus</a></li>
+    <li><a href="#method" onclick="document.getElementById('method').scrollIntoView({behavior:'smooth'});return false;">Method</a></li>
+    <li><a href="#app-interface" onclick="document.getElementById('app-interface').scrollIntoView({behavior:'smooth'});setTab('tab-sensors');return false;">Live Sensors</a></li>
+    <li><a href="#app-interface" onclick="document.getElementById('app-interface').scrollIntoView({behavior:'smooth'});setTab('tab-exposure');return false;">Exposure</a></li>
+    <li><a href="#app-interface" onclick="document.getElementById('app-interface').scrollIntoView({behavior:'smooth'});setTab('tab-agent');return false;">Ask Agent</a></li>
+  </ul>
+  <div class="nav-right">
+    <!-- Global City Typeahead Search -->
+    <div class="city-search-wrap">
+      <input type="text" class="city-search-input" id="city-search-input"
+             placeholder="🌍 Search any city…"
+             autocomplete="off"
+             oninput="onCitySearchInput(this.value)"
+             onkeydown="onCitySearchKey(event)"
+             onfocus="showCityDropdown()"
+             onblur="setTimeout(hideCityDropdown,200)"
+             value="Delhi, IN"/>
+      <div class="city-dropdown" id="city-dropdown"></div>
+    </div>
+    <button class="btn-nav-auth" id="btn-auth-trigger" onclick="openAuthModal()">Sign In</button>
+    <div class="user-profile-badge" id="user-badge" style="display:none" onclick="toggleUserMenu()">
+      <div class="user-avatar-dot"></div>
+      <span id="user-display-name">Executive</span>
+      <div class="user-menu-dropdown" id="user-dropdown">
+        <div class="user-menu-item" onclick="viewUserProfile()">Personal Profile</div>
+        <div class="user-menu-item logout" onclick="handleLogout()">Sign Out</div>
+      </div>
+    </div>
+    <button class="btn-nav-cta" onclick="document.getElementById('app-interface').scrollIntoView({behavior:'smooth'})">Explore Data →</button>
+  </div>
+</nav>
+
+<!-- ━━━ HERO SECTION (EXACT DEBUSSY REFERENCE LAYOUT) ━━━━━━━━━━━ -->
+<section class="hero">
+  <!-- Right Editorial Portrait Image Carousel (Blur Transitions every 5s) -->
+  <div class="hero-portrait" id="hero-slider">
+    <img class="hero-slide active" src="https://images.unsplash.com/photo-1583946099379-f9c9cb8bc030?w=1800&q=90&auto=format&fit=crop" alt="Dense smog over city skyline"/>
+    <img class="hero-slide" src="https://images.unsplash.com/photo-1584715642381-7b8da80700fa?w=1800&q=90&auto=format&fit=crop" alt="People wearing masks in polluted city"/>
+    <img class="hero-slide" src="https://images.unsplash.com/photo-1562155847-c05f7386b204?w=1800&q=90&auto=format&fit=crop" alt="Industrial smokestacks against dark sky"/>
+    <img class="hero-slide" src="https://images.unsplash.com/photo-1569121042778-1a7ee58d7e61?w=1800&q=90&auto=format&fit=crop" alt="City aerial view with pollution haze"/>
+    <div class="slider-progress-track"><div class="slider-progress-bar" id="slider-progress"></div></div>
+    <div class="slider-counter"><span id="slider-num">01</span> &mdash; 04</div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-pre">
+      <span class="hero-pre-line"></span>
+      REAL-TIME AIR INTELLIGENCE &mdash; EST. 2024
+    </div>
+
+    <h1 class="hero-h1">
+      Finally, Air Risk<br>
+      Your Teams Can<br>
+      <span class="hero-row3">
+        <span class="hero-last-word">Act On</span>
+      </span>
+    </h1>
+
+    <p class="hero-p">
+      AURA moves environmental intelligence from the abstract keynote into the daily operational workflow, giving every individual personal exposure clarity across a shifting climate.
+    </p>
+
+    <div class="hero-btn-group">
+      <button class="btn-de-blue" onclick="document.getElementById('app-interface').scrollIntoView({behavior:'smooth'})">Launch Apparatus</button>
+      <button class="btn-de-ghost" onclick="document.getElementById('method').scrollIntoView({behavior:'smooth'})">Inspect Method</button>
+    </div>
+  </div>
+
+  <!-- ── FULL-WIDTH PULSE TELEMETRY GRAPH (breaks out of text column) ── -->
+  <div class="hero-pulse-overlay" aria-hidden="true">
+    <svg class="hero-pulse-svg" viewBox="0 0 1920 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="pulseGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"   stop-color="#2563eb" stop-opacity="0"/>
+          <stop offset="12%" stop-color="#38bdf8" stop-opacity="0.9"/>
+          <stop offset="55%" stop-color="#2563eb" stop-opacity="0.8"/>
+          <stop offset="85%" stop-color="#38bdf8" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#2563eb" stop-opacity="0.1"/>
+        </linearGradient>
+        <filter id="hGlow" x="-30%" y="-200%" width="160%" height="500%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="nodeGlow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- Horizontal dashed telemetry backbone spanning full width -->
+      <line x1="0" y1="40" x2="420" y2="40"
+            stroke="url(#pulseGrad)" stroke-width="1.5" stroke-dasharray="6 9" opacity="0.7"/>
+
+      <!-- Constellation dip section — positioned where h1 "Act On" lives (~420–900px) -->
+      <path d="M 420 40 C 500 40 530 62 580 62 C 630 62 680 18 760 18 C 820 18 860 40 920 40"
+            fill="none" stroke="#38bdf8" stroke-width="1.4" stroke-dasharray="4 5" opacity="0.85" filter="url(#hGlow)"/>
+
+      <!-- Radar reticle around the lower dip node -->
+      <circle cx="580" cy="62" r="26" fill="rgba(56,189,248,0.05)" stroke="rgba(56,189,248,0.3)" stroke-dasharray="3 4" stroke-width="1"/>
+      <line x1="568" y1="62" x2="592" y2="62" stroke="rgba(56,189,248,0.55)" stroke-width="1"/>
+      <line x1="580" y1="50" x2="580" y2="74" stroke="rgba(56,189,248,0.55)" stroke-width="1"/>
+
+      <!-- Constellation telemetry nodes -->
+      <circle cx="420" cy="40" r="3.5" fill="#38bdf8" filter="url(#nodeGlow)"/>
+      <circle cx="580" cy="62" r="5"   fill="#38bdf8" filter="url(#nodeGlow)"/>
+      <circle cx="760" cy="18" r="3.5" fill="#ffffff" filter="url(#nodeGlow)" opacity="0.9"/>
+      <circle cx="920" cy="40" r="3.5" fill="#38bdf8" filter="url(#nodeGlow)"/>
+      <circle cx="1200" cy="40" r="3"  fill="#2563eb" filter="url(#nodeGlow)" opacity="0.7"/>
+
+      <!-- Telemetry line continuing across the portrait to the right edge -->
+      <line x1="920" y1="40" x2="1920" y2="40"
+            stroke="url(#pulseGrad)" stroke-width="1.5" stroke-dasharray="6 9" opacity="0.55"/>
+
+      <!-- Animated traveling photon beacon traversing the full path -->
+      <circle r="6" fill="#ffffff" filter="url(#hGlow)">
+        <animateMotion
+          path="M 0 40 L 420 40 C 500 40 530 62 580 62 C 630 62 680 18 760 18 C 820 18 860 40 920 40 L 1920 40"
+          dur="5s" repeatCount="indefinite" calcMode="linear"/>
+      </circle>
+      <!-- Trailing glow bead -->
+      <circle r="3" fill="#38bdf8" opacity="0.6" filter="url(#nodeGlow)">
+        <animateMotion
+          path="M 0 40 L 420 40 C 500 40 530 62 580 62 C 630 62 680 18 760 18 C 820 18 860 40 920 40 L 1920 40"
+          dur="5s" begin="0.18s" repeatCount="indefinite" calcMode="linear"/>
+      </circle>
+    </svg>
+  </div>
+</section>
+
+<!-- ━━━ METRIC STRIP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="metric-strip">
+  <div class="m-strip-cell">
+    <div class="m-strip-val" id="strip-aqi">249</div>
+    <div class="m-strip-lbl">Active <span>AQI</span> &middot; <span id="strip-city">Delhi</span></div>
+  </div>
+  <div class="m-strip-cell">
+    <div class="m-strip-val" id="strip-risk">100</div>
+    <div class="m-strip-lbl">ML Health <span>Risk /100</span></div>
+  </div>
+  <div class="m-strip-cell">
+    <div class="m-strip-val" id="strip-pm25">190<span style="font-size:22px"> µg</span></div>
+    <div class="m-strip-lbl">PM2.5 Concentration</div>
+  </div>
+  <div class="m-strip-cell">
+    <div class="m-strip-val" id="strip-anomaly" style="color:var(--green)">CLEAR</div>
+    <div class="m-strip-lbl">Isolation Forest <span>Anomaly</span></div>
+  </div>
+</div>
+
+<!-- ━━━ MAIN AURA AI APPARATUS (FULL STREAMLIT POWER) ━━━━━━━━━━━ -->
+<section id="app-interface">
+  <div class="section-tag">AURA OPERATIONAL APPARATUS</div>
+  <h2 class="section-title">Autonomous Environmental Intelligence</h2>
+  <p class="section-sub">
+    Five interconnected modules converting raw sensor telemetry into personal exposure predictions, counterfactual simulations, and agentic decisions.
+  </p>
+
+  <!-- Apparatus Tabs -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="setTab('tab-sensors')">01 &middot; Live Telemetry &amp; SHAP</button>
+    <button class="tab-btn" onclick="setTab('tab-exposure')">02 &middot; Personal Exposure Engine</button>
+    <button class="tab-btn" onclick="setTab('tab-whatif')">03 &middot; What-If Simulator</button>
+    <button class="tab-btn" onclick="setTab('tab-agent')">04 &middot; Ask AURA Agent</button>
+    <button class="tab-btn" onclick="setTab('tab-feed')">05 &middot; Observability Feed</button>
+  </div>
+
+  <!-- ── TAB 1: SENSORS & SHAP ────────────────────────────────── -->
+  <div id="tab-sensors" class="tab-pane active">
+    <div class="panel-grid-2col">
+      <!-- Live Readings -->
+      <div class="card-dark">
+        <h3 class="card-title">Sensor Ingestion Grid</h3>
+        <p class="card-desc">Calibrated telemetry polled from OpenAQ V3 &amp; Meteorological Stations.</p>
+
+        <div class="aqi-hero-gauge">
+          <div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-bottom:6px">CALCULATED AQI</div>
+            <div class="aqi-num" id="live-aqi-val" style="color:var(--red)">249</div>
+          </div>
+          <div style="text-align:right">
+            <div class="risk-badge-box" id="live-risk-badge" style="color:var(--red);border-color:var(--red);background:rgba(239,68,68,0.1)">VERY HIGH RISK</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:8px" id="live-timestamp">Updated just now</div>
+          </div>
+        </div>
+
+        <div class="telemetry-table">
+          <div class="telem-row">
+            <div class="telem-info"><span class="telem-name">PM2.5 (Fine Particulate)</span><span class="telem-val" id="val-pm25">190.0 µg/m³</span></div>
+            <div class="telem-bar-bg"><div class="telem-bar-fill" id="bar-pm25" style="width:75%;background:var(--red)"></div></div>
+          </div>
+          <div class="telem-row">
+            <div class="telem-info"><span class="telem-name">PM10 (Coarse Dust)</span><span class="telem-val" id="val-pm10">142.0 µg/m³</span></div>
+            <div class="telem-bar-bg"><div class="telem-bar-fill" id="bar-pm10" style="width:58%;background:var(--orange)"></div></div>
+          </div>
+          <div class="telem-row">
+            <div class="telem-info"><span class="telem-name">NO₂ (Nitrogen Dioxide)</span><span class="telem-val" id="val-no2">68.0 µg/m³</span></div>
+            <div class="telem-bar-bg"><div class="telem-bar-fill" id="bar-no2" style="width:40%;background:var(--amber)"></div></div>
+          </div>
+          <div class="telem-row">
+            <div class="telem-info"><span class="telem-name">Temperature</span><span class="telem-val" id="val-temp">24.5 °C</span></div>
+            <div class="telem-bar-bg"><div class="telem-bar-fill" id="bar-temp" style="width:50%;background:var(--blue-bright)"></div></div>
+          </div>
+          <div class="telem-row">
+            <div class="telem-info"><span class="telem-name">Relative Humidity</span><span class="telem-val" id="val-hum">64 %</span></div>
+            <div class="telem-bar-bg"><div class="telem-bar-fill" id="bar-hum" style="width:64%;background:var(--green)"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHAP Explainability -->
+      <div class="card-dark">
+        <h3 class="card-title">SHAP Explainability Decomposition</h3>
+        <p class="card-desc">Random Forest tree feature attribution explaining why this risk level was assigned.</p>
+
+        <div class="shap-list" id="shap-breakdown-container">
+          <div class="shap-row">
+            <div class="shap-header"><span class="shap-feat">PM2.5 EXPOSURE FACTOR</span><span class="shap-pct">46.2%</span></div>
+            <div class="shap-bar-bg"><div class="shap-bar-fill" style="width:46.2%"></div></div>
+          </div>
+          <div class="shap-row">
+            <div class="shap-header"><span class="shap-feat">PM10 COARSE FRACTION</span><span class="shap-pct">28.4%</span></div>
+            <div class="shap-bar-bg"><div class="shap-bar-fill" style="width:28.4%"></div></div>
+          </div>
+          <div class="shap-row">
+            <div class="shap-header"><span class="shap-feat">NO₂ COMBUSTION PRODUCT</span><span class="shap-pct">15.1%</span></div>
+            <div class="shap-bar-bg"><div class="shap-bar-fill" style="width:15.1%"></div></div>
+          </div>
+          <div class="shap-row">
+            <div class="shap-header"><span class="shap-feat">TEMPERATURE &amp; HUMIDITY INVERSION</span><span class="shap-pct">10.3%</span></div>
+            <div class="shap-bar-bg"><div class="shap-bar-fill" style="width:10.3%"></div></div>
+          </div>
+        </div>
+
+        <div class="shap-exp-text" id="shap-text-narrative">
+          Risk score is dominated by elevated particulate concentration (PM2.5 &amp; PM10), accounting for 74.6% of estimated hazard. Stagnant surface winds hinder dispersion.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 2: PERSONAL EXPOSURE ENGINE ──────────────────────── -->
+  <div id="tab-exposure" class="tab-pane">
+    <div class="panel-grid-2col">
+      <div class="card-dark">
+        <h3 class="card-title">Personal Parameter Calibration</h3>
+        <p class="card-desc">Raw AQI is environmental. Your physiological exposure is personal.</p>
+
+        <div class="form-ctrl-group">
+          <label class="form-label">Physical Activity Intensity</label>
+          <select class="form-select" id="exp-activity" onchange="recalculateExposure()">
+            <option value="Walking">Walking &middot; 1.0x Ventilation Rate</option>
+            <option value="Running" selected>Running &middot; 2.0x Ventilation Rate</option>
+            <option value="Cycling">Cycling &middot; 1.6x Ventilation Rate</option>
+            <option value="Indoor">Indoor Routine &middot; 0.3x Ambient Infiltration</option>
+            <option value="Resting">Resting Outdoors &middot; 0.7x Ventilation</option>
+          </select>
+        </div>
+
+        <div class="form-ctrl-group">
+          <label class="form-label">Duration: <span id="exp-dur-lbl" style="color:var(--white)">60</span> Minutes</label>
+          <input type="range" class="form-range" id="exp-duration" min="10" max="180" step="5" value="60" oninput="document.getElementById('exp-dur-lbl').textContent=this.value; recalculateExposure()">
+        </div>
+
+        <div class="toggle-switch-box">
+          <input type="checkbox" id="exp-mask" onchange="recalculateExposure()" style="width:18px;height:18px;accent-color:var(--blue)">
+          <div>
+            <div style="font-size:13px;font-weight:600">Wearing N95 Particulate Respirator</div>
+            <div style="font-size:11px;color:var(--text-muted)">Attenuates 60% of inhaled aerosol mass</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-result-box">
+        <div class="calc-exposure-val" id="calc-score">100.0</div>
+        <div class="calc-exposure-lbl" id="calc-level-lbl">ESTIMATED PERSONAL EXPOSURE RISK &middot; VERY HIGH</div>
+        <div class="multiplier-pill-row">
+          <div class="mult-pill" id="mult-env">Base Env Risk: 75.0</div>
+          <div class="mult-pill" id="mult-act">Activity: 2.0x</div>
+          <div class="mult-pill" id="mult-dur">Duration: 1.0x</div>
+          <div class="mult-pill" id="mult-mask">Mask: 1.0x</div>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:24px;max-width:360px">
+          Estimated personal exposure calibrated on minute ventilation rates and aerosol penetration coefficients.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 3: WHAT-IF SIMULATOR ──────────────────────────────── -->
+  <div id="tab-whatif" class="tab-pane">
+    <div class="card-dark" style="margin-bottom:24px">
+      <h3 class="card-title">Temporal Counterfactuals</h3>
+      <p class="card-desc">Simulated exposure outcomes across alternative departure windows using GBR lag forecast.</p>
+
+      <div class="sim-timeline-grid" id="sim-cards-grid">
+        <div class="sim-card">
+          <div class="sim-horizon">NOW (BASE)</div>
+          <div class="sim-score" style="color:var(--red)">100</div>
+          <div class="sim-delta" style="color:var(--text-muted)">Current Plan</div>
+        </div>
+        <div class="sim-card best">
+          <div class="sim-horizon">+1 HOUR</div>
+          <div class="sim-score" style="color:var(--amber)">78</div>
+          <div class="sim-delta" style="color:var(--green)">-22 pts (Optimal)</div>
+        </div>
+        <div class="sim-card">
+          <div class="sim-horizon">+3 HOURS</div>
+          <div class="sim-score" style="color:var(--orange)">86</div>
+          <div class="sim-delta" style="color:var(--green)">-14 pts</div>
+        </div>
+        <div class="sim-card">
+          <div class="sim-horizon">+6 HOURS</div>
+          <div class="sim-score" style="color:var(--red)">94</div>
+          <div class="sim-delta" style="color:var(--green)">-6 pts</div>
+        </div>
+        <div class="sim-card">
+          <div class="sim-horizon">+12 HOURS</div>
+          <div class="sim-score" style="color:var(--amber)">82</div>
+          <div class="sim-delta" style="color:var(--green)">-18 pts</div>
+        </div>
+      </div>
+
+      <!-- Constraint Optimizer -->
+      <div class="constraint-box">
+        <div class="constraint-toggle-row">
+          <div>
+            <div style="font-size:14px;font-weight:700">Constraint Optimizer &middot; "I Cannot Change My Time"</div>
+            <div style="font-size:12px;color:var(--text-muted)">When schedule flexibility is zero, generate active physiological mitigations.</div>
+          </div>
+          <button class="btn-de-blue" style="padding:8px 18px;font-size:11px" onclick="runOptimizer()">Compute Mitigations</button>
+        </div>
+
+        <div class="opt-suggestions-list" id="opt-suggestions-box">
+          <div class="opt-sugg-item">
+            <span>🛡️</span>
+            <div><b>Wear an N95 Particulate Respirator:</b> Mitigates exposure from 100.0 to 39.2 (60.8% reduction) without altering duration.</div>
+          </div>
+          <div class="opt-sugg-item">
+            <span>⏱️</span>
+            <div><b>Reduce Duration to 25 Minutes:</b> Caps inhaled particulate dose within safety boundary (Exposure: 48.6).</div>
+          </div>
+          <div class="opt-sugg-item">
+            <span>🚶</span>
+            <div><b>Shift Intensity from Running to Walking:</b> Lowers ventilation minute volume by 50% (Exposure: 50.0).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 4: ASK AURA (AI AGENT CHAT) ──────────────────────── -->
+  <div id="tab-agent" class="tab-pane">
+    <div class="chat-container">
+      <div class="chat-header">
+        <div><span>🤖</span> SUPERVISOR AGENT &middot; ORCHESTRATION PIPELINE</div>
+        <div style="color:var(--green)">● AGENT READY</div>
+      </div>
+
+      <div class="chat-feed" id="chat-messages">
+        <div class="chat-bubble aura">
+          Hello. I am AURA. I monitor live environmental telemetry and synthesize personalized exposure solutions. Ask me about your planned activities or constraint adjustments.
+          <div><span class="tool-tag">SupervisorAgent &middot; Online</span></div>
+        </div>
+      </div>
+
+      <div class="chat-chips">
+        <button class="chip-btn" onclick="sendQuickPrompt('Should I go running now?')">Should I go running now?</button>
+        <button class="chip-btn" onclick="sendQuickPrompt('I cannot change my time, what should I do?')">I cannot change my time, what should I do?</button>
+        <button class="chip-btn" onclick="sendQuickPrompt('When is the safest time to exercise outdoors today?')">When is the safest time today?</button>
+      </div>
+
+      <form class="chat-input-bar" onsubmit="handleChatSubmit(event)">
+        <input type="text" id="chat-text-input" placeholder="Query AURA regarding your exposure or schedule..." autocomplete="off"/>
+        <button type="submit" class="chat-send-btn">TRANSMIT →</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── TAB 5: OBSERVABILITY FEED ────────────────────────────── -->
+  <div id="tab-feed" class="tab-pane">
+    <div class="card-dark">
+      <h3 class="card-title">Live Agent Observability Stream</h3>
+      <p class="card-desc">Auditable transaction log of background agent invocations, tool execution, and consensus.</p>
+
+      <div class="agent-feed-table">
+        <div class="feed-row header">
+          <div>TIMESTAMP</div>
+          <div>AGENT</div>
+          <div>ACTION &middot; RESULT</div>
+          <div style="text-align:right">STATUS</div>
+        </div>
+        <div id="feed-rows-container">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ━━━ METHOD SECTION (MATCHING DEBUSSY CORPORATE EDITORIAL) ━━━ -->
+<section id="method">
+  <div class="split-editorial">
+    <div class="editorial-img">
+      <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=900&q=80&auto=format&fit=crop" alt="Planetary Observation Satellite"/>
+      <div class="editorial-fig">FIG. 01 &mdash; MULTI-LAYER DISPERSION MATRIX</div>
+    </div>
+
+    <div>
+      <div class="section-tag">THE AURA ARCHITECTURE</div>
+      <h2 class="section-title">A training practice meticulously engineered for real adoption.</h2>
+      <p style="font-size:15px;color:var(--text-sub);line-height:1.8;margin-bottom:20px">
+        Traditional air quality applications operate as passive readouts—broadcasting regional AQI values disconnected from human physiological consequence.
+      </p>
+      <p style="font-size:15px;color:var(--text-muted);line-height:1.8">
+        AURA introduces closed-loop agentic surveillance. It couples trained regression ensembles with real-time biometric multipliers, proactively resolving schedule conflicts before acute exposure occurs.
+      </p>
+
+      <div class="editorial-pillars">
+        <div class="pillar-card">
+          <div class="pillar-num">01.</div>
+          <div class="pillar-h">Autonomous Ingestion</div>
+          <div class="pillar-p">Continuous sub-hourly sensor triangulation across OpenAQ and weather gradients.</div>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-num">02.</div>
+          <div class="pillar-h">Lagged GBR Forecasting</div>
+          <div class="pillar-p">Gradient boosted lag models predicting +1h, +3h, +6h, +12h particulate trajectories.</div>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-num">03.</div>
+          <div class="pillar-h">Dynamic Exposure Engine</div>
+          <div class="pillar-p">Physiological minute ventilation scaling against ambient particulate fractions.</div>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-num">04.</div>
+          <div class="pillar-h">Deterministic Routing</div>
+          <div class="pillar-p">Zero-hallucination supervisor orchestration with transparent audit trail logging.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ━━━ FOOTER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<footer>
+  <div>
+    <div class="footer-logo">AURA<span class="brand-dot"></span></div>
+    <p class="footer-desc">
+      Autonomous Urban Risk Agent. Environmental clarity engineered for enterprise and municipal decision integrity.
+    </p>
+  </div>
+  <div class="footer-col">
+    <h4>NAVIGATION</h4>
+    <ul>
+      <li><a href="#app-interface">Apparatus</a></li>
+      <li><a href="#method">Method</a></li>
+      <li><a href="#live-sensors">Live Sensors</a></li>
+      <li><a href="#ai-agent">Ask Agent</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>COVERAGE REGIONS</h4>
+    <ul>
+      <li><a href="javascript:switchCity('Delhi')">Delhi National Capital</a></li>
+      <li><a href="javascript:switchCity('Lucknow')">Lucknow Central</a></li>
+      <li><a href="javascript:switchCity('Mumbai')">Mumbai Coastal</a></li>
+      <li><a href="javascript:switchCity('Bangalore')">Bangalore Urban</a></li>
+    </ul>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <div>&copy; 2024 AURA &middot; AUTONOMOUS URBAN RISK AGENT</div>
+  <div>AQI IS ENVIRONMENTAL. EXPOSURE IS PERSONAL.</div>
+</div>
+
+<!-- ━━━ AUTHENTICATION MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="auth-modal-overlay" id="auth-modal" style="display:none">
+  <div class="auth-modal-card">
+    <button class="auth-modal-close" onclick="closeAuthModal()">&times;</button>
+    <div class="auth-pre">AURA SECURITY &middot; WORKSTATION IDENTIFICATION</div>
+    <h3 class="auth-title">Operational Access</h3>
+    <p class="auth-desc">Authenticate to synchronize personal biometric sensitivities, preferred routes, and autonomous agent alerts.</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login-btn" onclick="setAuthTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-reg-btn" onclick="setAuthTab('reg')">Register Workstation</button>
+    </div>
+
+    <!-- Sign In Form -->
+    <form id="form-login" onsubmit="submitLogin(event)">
+      <div class="auth-field">
+        <label>WORKSTATION OPERATOR / EMAIL</label>
+        <input type="text" id="login-id" placeholder="Executive User or name@org.com" required value="Executive User"/>
+      </div>
+      <div class="auth-field">
+        <label>SECURITY PASSCODE</label>
+        <input type="password" id="login-pass" placeholder="••••••••" required value="aura123"/>
+      </div>
+      <button type="submit" class="auth-submit-btn" id="btn-login-submit">Authorize Session &rarr;</button>
+
+      <div class="quick-login-label">QUICK SIMULATION PROFILES</div>
+      <div class="quick-chips-row">
+        <button type="button" class="quick-chip" onclick="quickFill('Executive User', 'Delhi')">👤 Executive User (Delhi &middot; Running)</button>
+        <button type="button" class="quick-chip" onclick="quickFill('Dr. Sarah Chen', 'Lucknow')">👤 Urban Researcher (Lucknow &middot; Walking)</button>
+        <button type="button" class="quick-chip" onclick="quickFill('Operations Director', 'Mumbai')">👤 Operations Director (Mumbai &middot; Metro)</button>
+      </div>
+    </form>
+
+    <!-- Register Form -->
+    <form id="form-register" style="display:none" onsubmit="submitRegister(event)">
+      <div class="auth-field">
+        <label>OPERATOR NAME</label>
+        <input type="text" id="reg-name" placeholder="Dr. Sarah Chen" required/>
+      </div>
+      <div class="auth-field">
+        <label>PRIMARY METROPOLITAN REGION</label>
+        <select id="reg-city" class="auth-select">
+          <option value="Delhi">Delhi, IN</option>
+          <option value="Lucknow">Lucknow, IN</option>
+          <option value="Jaipur">Jaipur, IN</option>
+          <option value="Mumbai">Mumbai, IN</option>
+          <option value="Bangalore">Bangalore, IN</option>
+          <option value="Kolkata">Kolkata, IN</option>
+          <option value="Hyderabad">Hyderabad, IN</option>
+          <option value="Chennai">Chennai, IN</option>
+          <option value="Pune">Pune, IN</option>
+        </select>
+      </div>
+      <div class="auth-field">
+        <label>PRIMARY OUTDOOR ACTIVITY</label>
+        <select id="reg-activity" class="auth-select">
+          <option value="Running">Running (2.0x ventilation)</option>
+          <option value="Walking">Walking (1.0x ventilation)</option>
+          <option value="Cycling">Cycling (1.6x ventilation)</option>
+          <option value="Indoor">Indoor Routine</option>
+        </select>
+      </div>
+      <button type="submit" class="auth-submit-btn" id="btn-reg-submit">Enroll Workstation &rarr;</button>
+    </form>
+  </div>
+</div>
+
+<!-- ━━━ CLIENT CONTROLLER JAVASCRIPT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<script>
+const API_BASE = ''; // Same origin
+let currentCity = 'Delhi';
+let liveEnvData = null;
+
+// Tab switcher
+function setTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+  document.querySelector(`[onclick="setTab('${tabId}')"]`).classList.add('active');
+  const targetPane = document.getElementById(tabId);
+  targetPane.classList.add('active');
+
+  // Trigger pop-up reveal on cards in newly activated tab
+  targetPane.querySelectorAll('.card-dark, .calc-result-box, .sim-card, .chat-container').forEach((el, i) => {
+    el.classList.remove('revealed');
+    setTimeout(() => el.classList.add('revealed'), 40 + i * 80);
+  });
+}
+
+// City switcher — works with typeahead input
+async function switchCity(city, label) {
+  currentCity = city;
+  const inp = document.getElementById('city-search-input');
+  if (inp) inp.value = label || city;
+  const stripCity = document.getElementById('strip-city');
+  if (stripCity) stripCity.textContent = city;
+  await loadLiveDashboard();
+  await recalculateExposure();
+}
+
+// ── Global City Typeahead ──────────────────────────────────────────
+let _citySearchTimer = null;
+let _cityResults = [];
+let _cityActivIdx = -1;
+
+async function onCitySearchInput(val) {
+  clearTimeout(_citySearchTimer);
+  if (val.trim().length < 2) { hideCityDropdown(); return; }
+  _citySearchTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/geocode?q=${encodeURIComponent(val.trim())}`);
+      const data = await res.json();
+      _cityResults = data.results || [];
+      _cityActivIdx = -1;
+      renderCityDropdown(_cityResults);
+    } catch(e) {
+      // Silently fail — fallback to whatever the user typed
+    }
+  }, 280);
+}
+
+function renderCityDropdown(results) {
+  const dd = document.getElementById('city-dropdown');
+  if (!dd) return;
+  if (!results.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = results.map((r, i) =>
+    `<div class="city-option" data-idx="${i}" onmousedown="selectCityOption(${i})">
+      ${r.name}<small class="opt-country">${r.state ? r.state + ', ' : ''}${r.country}</small>
+    </div>`
+  ).join('');
+  dd.style.display = 'block';
+}
+
+function selectCityOption(idx) {
+  const r = _cityResults[idx];
+  if (!r) return;
+  switchCity(r.name, r.label);
+  hideCityDropdown();
+}
+
+function showCityDropdown() {
+  const dd = document.getElementById('city-dropdown');
+  if (dd && _cityResults.length) dd.style.display = 'block';
+}
+
+function hideCityDropdown() {
+  const dd = document.getElementById('city-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+function onCitySearchKey(e) {
+  const dd = document.getElementById('city-dropdown');
+  const opts = dd ? dd.querySelectorAll('.city-option') : [];
+  if (!opts.length) {
+    // If enter pressed with no results, switch by raw typed city name
+    if (e.key === 'Enter') {
+      const val = document.getElementById('city-search-input').value.trim().split(',')[0].trim();
+      if (val) { switchCity(val, val); hideCityDropdown(); }
+    }
+    return;
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _cityActivIdx = Math.min(_cityActivIdx + 1, opts.length - 1);
+    opts.forEach((o, i) => o.classList.toggle('active-opt', i === _cityActivIdx));
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _cityActivIdx = Math.max(_cityActivIdx - 1, 0);
+    opts.forEach((o, i) => o.classList.toggle('active-opt', i === _cityActivIdx));
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (_cityActivIdx >= 0) selectCityOption(_cityActivIdx);
+    else {
+      // Use first result
+      selectCityOption(0);
+    }
+  } else if (e.key === 'Escape') {
+    hideCityDropdown();
+  }
+}
+
+// Color mapper for AQI
+function getAqiColor(aqi) {
+  if (!aqi) return 'var(--text-muted)';
+  if (aqi <= 50) return 'var(--green)';
+  if (aqi <= 100) return '#84cc16';
+  if (aqi <= 150) return 'var(--amber)';
+  if (aqi <= 200) return 'var(--orange)';
+  if (aqi <= 300) return 'var(--red)';
+  return '#7c3aed';
+}
+
+// Load Live Dashboard
+async function loadLiveDashboard() {
+  try {
+    const res = await fetch(`${API_BASE}/api/live/${currentCity}`);
+    if (!res.ok) throw new Error('Network response failed');
+    const data = await res.json();
+    liveEnvData = data;
+
+    if (data.data_available && data.environment) {
+      const env = data.environment;
+      const aqiVal = Math.round(env.aqi || 120);
+
+      // Hero strip
+      document.getElementById('strip-aqi').textContent = aqiVal;
+      document.getElementById('strip-aqi').style.color = getAqiColor(aqiVal);
+      document.getElementById('strip-risk').textContent = data.risk?.score ? Math.round(data.risk.score) : '—';
+      document.getElementById('strip-pm25').innerHTML = `${Math.round(env.pm25 || 80)}<span style="font-size:22px"> µg</span>`;
+
+      // Anomaly
+      const anomEl = document.getElementById('strip-anomaly');
+      if (data.anomaly?.is_anomaly) {
+        anomEl.textContent = 'SPIKE';
+        anomEl.style.color = 'var(--red)';
+      } else {
+        anomEl.textContent = 'CLEAR';
+        anomEl.style.color = 'var(--green)';
+      }
+
+      // Tab 1: Live Sensors
+      document.getElementById('live-aqi-val').textContent = aqiVal;
+      document.getElementById('live-aqi-val').style.color = getAqiColor(aqiVal);
+
+      const rBadge = document.getElementById('live-risk-badge');
+      const rLvl = data.risk?.level || 'MODERATE';
+      rBadge.textContent = `${rLvl} RISK`;
+      const badgeColor = getAqiColor(aqiVal);
+      rBadge.style.color = badgeColor;
+      rBadge.style.borderColor = badgeColor;
+      rBadge.style.background = badgeColor + '18';
+
+      // Bars
+      document.getElementById('val-pm25').textContent = `${(env.pm25 || 0).toFixed(1)} µg/m³`;
+      document.getElementById('bar-pm25').style.width = `${Math.min((env.pm25 || 0) / 250 * 100, 100)}%`;
+
+      document.getElementById('val-pm10').textContent = `${(env.pm10 || 0).toFixed(1)} µg/m³`;
+      document.getElementById('bar-pm10').style.width = `${Math.min((env.pm10 || 0) / 350 * 100, 100)}%`;
+
+      document.getElementById('val-no2').textContent = `${(env.no2 || 0).toFixed(1)} µg/m³`;
+      document.getElementById('bar-no2').style.width = `${Math.min((env.no2 || 0) / 150 * 100, 100)}%`;
+
+      document.getElementById('val-temp').textContent = `${(env.temperature || 24).toFixed(1)} °C`;
+      document.getElementById('val-hum').textContent = `${Math.round(env.humidity || 60)} %`;
+
+      // SHAP decomposition
+      if (data.explanation) {
+        if (data.explanation.explanation_text) {
+          document.getElementById('shap-text-narrative').textContent = data.explanation.explanation_text;
+        }
+        if (data.explanation.pct_contributions) {
+          const pcts = data.explanation.pct_contributions;
+          const container = document.getElementById('shap-breakdown-container');
+          container.innerHTML = Object.entries(pcts).slice(0, 5).map(([feat, val]) => `
+            <div class="shap-row">
+              <div class="shap-header"><span class="shap-feat">${feat.toUpperCase()} ATTRIBUTION</span><span class="shap-pct">${val.toFixed(1)}%</span></div>
+              <div class="shap-bar-bg"><div class="shap-bar-fill" style="width:${val}%"></div></div>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Forecast cards in What-If
+      if (data.forecast && data.forecast.length) {
+        const grid = document.getElementById('sim-cards-grid');
+        let html = `
+          <div class="sim-card">
+            <div class="sim-horizon">NOW (BASE)</div>
+            <div class="sim-score" style="color:${getAqiColor(aqiVal)}">${aqiVal}</div>
+            <div class="sim-delta" style="color:var(--text-muted)">Current Plan</div>
+          </div>
+        `;
+        let minAqi = 9999, bestIdx = 0;
+        data.forecast.forEach((f, idx) => {
+          if (f.predicted_aqi < minAqi) { minAqi = f.predicted_aqi; bestIdx = idx; }
+        });
+
+        data.forecast.forEach((f, idx) => {
+          const fAqi = Math.round(f.predicted_aqi);
+          const delta = fAqi - aqiVal;
+          const isBest = (idx === bestIdx);
+          const deltaText = delta < 0 ? `${delta} pts (Optimal)` : `+${delta} pts`;
+          const deltaColor = delta < 0 ? 'var(--green)' : 'var(--orange)';
+          html += `
+            <div class="sim-card reveal revealed delay-${(idx % 4) + 1} ${isBest ? 'best' : ''}">
+              <div class="sim-horizon">${f.horizon}</div>
+              <div class="sim-score" style="color:${getAqiColor(fAqi)}">${fAqi}</div>
+              <div class="sim-delta" style="color:${deltaColor}">${deltaText}</div>
+            </div>
+          `;
+        });
+        grid.innerHTML = html;
+      }
+    }
+  } catch (err) {
+    console.warn('Dashboard poll error:', err);
+  }
+}
+
+// Recalculate Exposure
+async function recalculateExposure() {
+  const act = document.getElementById('exp-activity').value;
+  const dur = parseInt(document.getElementById('exp-duration').value);
+  const mask = document.getElementById('exp-mask').checked;
+
+  const currentAqi = liveEnvData?.environment?.aqi || 249;
+  const baseRisk = Math.min(currentAqi / 5.0, 100.0);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/exposure`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        base_risk_score: baseRisk,
+        activity: act,
+        duration_minutes: dur,
+        mask_usage: mask
+      })
+    });
+    if (!res.ok) throw new Error('Exposure calculation failed');
+    const d = await res.json();
+
+    const scoreEl = document.getElementById('calc-score');
+    const lvlEl = document.getElementById('calc-level-lbl');
+    scoreEl.textContent = d.estimated_exposure.toFixed(1);
+
+    const col = d.risk_level === 'LOW' ? 'var(--green)' : (d.risk_level === 'MODERATE' ? 'var(--amber)' : 'var(--red)');
+    scoreEl.style.color = col;
+    lvlEl.textContent = `ESTIMATED PERSONAL EXPOSURE RISK \u00B7 ${d.risk_level}`;
+
+    document.getElementById('mult-env').textContent = `Base Env Risk: ${d.factors.base_environmental_risk.toFixed(1)}`;
+    document.getElementById('mult-act').textContent = `Activity: ${d.factors.activity_multiplier}x`;
+    document.getElementById('mult-dur').textContent = `Duration: ${d.factors.duration_multiplier}x`;
+    document.getElementById('mult-mask').textContent = `Mask: ${d.factors.mask_multiplier}x`;
+  } catch (err) {
+    console.warn('Exposure error:', err);
+  }
+}
+
+// Run Constraint Optimizer
+async function runOptimizer() {
+  const currentAqi = liveEnvData?.environment?.aqi || 249;
+  const envRisk = Math.min(currentAqi / 5.0, 100.0);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/optimize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        env_risk: envRisk,
+        target_max_exposure: 50.0,
+        base_activity: 'Running',
+        base_duration: 60
+      })
+    });
+    if (!res.ok) throw new Error('Optimizer call failed');
+    const data = await res.json();
+    const box = document.getElementById('opt-suggestions-box');
+
+    if (data.suggestions && data.suggestions.length) {
+      box.innerHTML = data.suggestions.map((sugg, i) => `
+        <div class="opt-sugg-item reveal revealed delay-${(i % 3) + 1}">
+          <span>\u26A1</span>
+          <div>${sugg}</div>
+        </div>
+      `).join('');
+    }
+  } catch (err) {
+    console.warn('Optimizer error:', err);
+  }
+}
+
+// Chat with Supervisor Agent
+async function handleChatSubmit(e) {
+  e.preventDefault();
+  const input = document.getElementById('chat-text-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  appendChatMessage('user', text);
+  appendChatMessage('aura', 'Evaluating scenario across ML forecast and constraint matrices...', null, 'temp-loading');
+
+  try {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: 1, query: text, city: currentCity })
+    });
+    if (!res.ok) throw new Error('Agent failed to respond');
+    const data = await res.json();
+
+    // Remove loading
+    const loadEl = document.getElementById('temp-loading');
+    if (loadEl) loadEl.remove();
+
+    appendChatMessage('aura', data.response, data.tools_used);
+  } catch (err) {
+    const loadEl = document.getElementById('temp-loading');
+    if (loadEl) loadEl.remove();
+    appendChatMessage('aura', 'Apologies. Unable to synchronize with the agent supervisor right now.');
+  }
+}
+
+function sendQuickPrompt(promptText) {
+  document.getElementById('chat-text-input').value = promptText;
+  handleChatSubmit(new Event('submit'));
+}
+
+function appendChatMessage(sender, text, tools = null, id = null) {
+  const feed = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = `chat-bubble ${sender}`;
+  if (id) div.id = id;
+
+  let toolsHtml = '';
+  if (tools && tools.length) {
+    toolsHtml = `<div><span class="tool-tag">Tools Orchestrated: ${tools.join(', ')}</span></div>`;
+  }
+
+  div.innerHTML = `${text.replace(/\n/g, '<br>')}${toolsHtml}`;
+  feed.appendChild(div);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+// Load Agent Feed
+async function loadAgentFeed() {
+  try {
+    const res = await fetch(`${API_BASE}/api/activity?limit=10`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const container = document.getElementById('feed-rows-container');
+
+    if (data.logs && data.logs.length) {
+      container.innerHTML = data.logs.map(l => {
+        const ts = l.timestamp ? l.timestamp.substr(11, 8) : '00:00:00';
+        const stCol = l.status === 'SUCCESS' ? 'var(--green)' : 'var(--amber)';
+        return `
+          <div class="feed-row">
+            <div class="feed-ts">${ts}</div>
+            <div class="feed-agent" style="color:var(--blue-bright)">${l.agent}</div>
+            <div style="color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.action} &middot; ${(l.result || '').substr(0, 65)}</div>
+            <div style="text-align:right"><span class="feed-status-badge" style="color:${stCol};border-color:${stCol}">${l.status}</span></div>
+          </div>
+        `;
+      }).join('');
+    }
+  } catch (err) {}
+}
+
+// Scroll Pop-up Motion System
+function initScrollReveal() {
+  const elementsToReveal = document.querySelectorAll(
+    '.m-strip-cell, .card-dark, .calc-result-box, .sim-card, .pillar-card, .editorial-img, .split-editorial > div, .section-title, .section-sub, .tab-nav, .chat-container, .opt-sugg-item, .footer-col'
+  );
+
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        obs.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.08,
+    rootMargin: '0px 0px -30px 0px'
+  });
+
+  elementsToReveal.forEach((el) => {
+    if (!el.classList.contains('reveal')) {
+      el.classList.add('reveal');
+    }
+    const parent = el.parentElement;
+    if (parent && (parent.classList.contains('metric-strip') || parent.classList.contains('sim-timeline-grid') || parent.classList.contains('editorial-pillars') || parent.classList.contains('opt-suggestions-list'))) {
+      const idx = Array.from(parent.children).indexOf(el);
+      if (idx > 0 && idx <= 5) {
+        el.classList.add(`delay-${idx}`);
+      }
+    }
+    observer.observe(el);
+  });
+}
+
+// Hero Background Image Carousel (5s blur transition)
+function initHeroSlider() {
+  const slides = document.querySelectorAll('.hero-slide');
+  const numEl = document.getElementById('slider-num');
+  const progressEl = document.getElementById('slider-progress');
+  if (!slides.length) return;
+  let current = 0;
+
+  function triggerProgress() {
+    if (!progressEl) return;
+    progressEl.style.transition = 'none';
+    progressEl.style.width = '0%';
+    setTimeout(() => {
+      progressEl.style.transition = 'width 5s linear';
+      progressEl.style.width = '100%';
+    }, 50);
+  }
+
+  triggerProgress();
+
+  setInterval(() => {
+    slides[current].classList.remove('active');
+    current = (current + 1) % slides.length;
+    slides[current].classList.add('active');
+    if (numEl) numEl.textContent = `0${current + 1}`;
+    triggerProgress();
+  }, 5000);
+}
+
+// Authentication Modal and State Management
+let currentUser = null;
+
+function openAuthModal() {
+  document.getElementById('auth-modal').style.display = 'flex';
+}
+
+function closeAuthModal() {
+  document.getElementById('auth-modal').style.display = 'none';
+}
+
+function setAuthTab(tab) {
+  const loginForm = document.getElementById('form-login');
+  const regForm = document.getElementById('form-register');
+  const loginTab = document.getElementById('tab-login-btn');
+  const regTab = document.getElementById('tab-reg-btn');
+
+  if (tab === 'login') {
+    loginForm.style.display = 'block';
+    regForm.style.display = 'none';
+    loginTab.classList.add('active');
+    regTab.classList.remove('active');
+  } else {
+    loginForm.style.display = 'none';
+    regForm.style.display = 'block';
+    regTab.classList.add('active');
+    loginTab.classList.remove('active');
+  }
+}
+
+function quickFill(name, city) {
+  document.getElementById('login-id').value = name;
+  document.getElementById('login-pass').value = 'aura123';
+}
+
+async function submitLogin(e) {
+  e.preventDefault();
+  const name = document.getElementById('login-id').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+  const btn = document.getElementById('btn-login-submit');
+  btn.textContent = 'AUTHORIZING...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email_or_name: name, password: pass })
+    });
+    const data = await res.json();
+    if (data.status === 'success' && data.user) {
+      currentUser = data.user;
+      localStorage.setItem('aura_user', JSON.stringify(data.user));
+      applyUserSession(data.user);
+      closeAuthModal();
+    }
+  } catch (err) {
+    console.warn('Login error:', err);
+  } finally {
+    btn.textContent = 'Authorize Session →';
+    btn.disabled = false;
+  }
+}
+
+async function submitRegister(e) {
+  e.preventDefault();
+  const name = document.getElementById('reg-name').value.trim();
+  const city = document.getElementById('reg-city').value;
+  const activity = document.getElementById('reg-activity').value;
+  const btn = document.getElementById('btn-reg-submit');
+  btn.textContent = 'ENROLLING...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, city, primary_activity: activity, mask_usage: false })
+    });
+    const data = await res.json();
+    if (data.status === 'success' && data.user) {
+      currentUser = data.user;
+      localStorage.setItem('aura_user', JSON.stringify(data.user));
+      applyUserSession(data.user);
+      closeAuthModal();
+    }
+  } catch (err) {
+    console.warn('Register error:', err);
+  } finally {
+    btn.textContent = 'Enroll Workstation →';
+    btn.disabled = false;
+  }
+}
+
+function applyUserSession(user) {
+  if (!user) return;
+  document.getElementById('btn-auth-trigger').style.display = 'none';
+  const badge = document.getElementById('user-badge');
+  badge.style.display = 'flex';
+  document.getElementById('user-display-name').textContent = `${user.name.split(' ')[0]} (${user.city || 'Delhi'})`;
+
+  if (user.city && user.city !== currentCity) {
+    switchCity(user.city);
+  }
+  if (user.primary_activity) {
+    const actSelect = document.getElementById('exp-activity');
+    if (actSelect) {
+      actSelect.value = user.primary_activity;
+      recalculateExposure();
+    }
+  }
+
+  // Personalized greeting in Supervisor chat
+  const chatFeed = document.getElementById('chat-messages');
+  if (chatFeed) {
+    const greetBubble = document.createElement('div');
+    greetBubble.className = 'chat-bubble aura';
+    greetBubble.innerHTML = `Welcome back, <b>${user.name}</b>. Synchronized with your personal workstation profile (Region: ${user.city}, Focus: ${user.primary_activity}). Autonomous surveillance is armed.`;
+    chatFeed.appendChild(greetBubble);
+    chatFeed.scrollTop = chatFeed.scrollHeight;
+  }
+}
+
+function handleLogout() {
+  currentUser = null;
+  localStorage.removeItem('aura_user');
+  document.getElementById('user-badge').style.display = 'none';
+  document.getElementById('btn-auth-trigger').style.display = 'block';
+  document.getElementById('user-dropdown').style.display = 'none';
+}
+
+function toggleUserMenu() {
+  const dd = document.getElementById('user-dropdown');
+  dd.style.display = dd.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function viewUserProfile() {
+  setTab('tab-exposure');
+  document.getElementById('app-interface').scrollIntoView({ behavior: 'smooth' });
+}
+
+function restoreSession() {
+  try {
+    const saved = localStorage.getItem('aura_user');
+    if (saved) {
+      currentUser = JSON.parse(saved);
+      applyUserSession(currentUser);
+    }
+  } catch (e) {}
+}
+
+// Startup
+window.addEventListener('DOMContentLoaded', async () => {
+  initHeroSlider();
+  initScrollReveal();
+  restoreSession();
+  await loadLiveDashboard();
+  await recalculateExposure();
+  await loadAgentFeed();
+  setInterval(loadLiveDashboard, 30000);
+  setInterval(loadAgentFeed, 15000);
+});
+</script>
+</body>
+</html>
